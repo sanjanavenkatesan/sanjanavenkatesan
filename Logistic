@@ -1,0 +1,28 @@
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_selection import RFE, SelectFromModel
+from sklearn.ensemble import RandomForestClassifier
+
+# Assuming you have a DataFrame 'X' with your independent variables and a Series 'y' with the target variable
+
+# Method 1: Recursive Feature Elimination (RFE)
+model_rfe = LogisticRegression()
+num_features_to_select = 10  # Adjust as needed
+rfe = RFE(model_rfe, num_features_to_select)
+X_rfe = rfe.fit_transform(X, y)
+
+# Method 2: L1 Regularization (Lasso)
+model_lasso = LogisticRegression(penalty='l1', solver='liblinear')
+model_lasso.fit(X, y)
+sfm = SelectFromModel(model_lasso, prefit=True)
+X_lasso = sfm.transform(X)
+
+# Method 3: Feature Importance from Random Forest
+model_rf = RandomForestClassifier()
+model_rf.fit(X, y)
+feature_importances = model_rf.feature_importances_
+threshold = 0.05  # Adjust as needed
+important_indices = feature_importances > threshold
+X_rf = X.iloc[:, important_indices]
+
+# Now, you have three different subsets of features: X_rfe, X_lasso, and X_rf
