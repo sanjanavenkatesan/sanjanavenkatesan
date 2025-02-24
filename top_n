@@ -1,0 +1,44 @@
+%%time
+ 
+def top_n_regression(target_var,pred_prob):
+    thr_list=[0.99,0.97,0.95,0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20,0.10]
+#     thr_list=[0.01,0.03,0.05,0.10,0.20,0.30,0.40,0.50,0.60,0.70,0.80,0.90]
+    col=['N_Percentile','TN','FP','FN','TP','PPV','Sensitivity','Accuracy']#,'R2']
+    result=pd.DataFrame(columns=col)
+    i=0
+   
+    for thr in thr_list:
+       
+        prob=pd.DataFrame()
+        prob['target_var']=target_var
+        prob['pred_prob']=pred_prob
+       
+        thr_value_1=prob['pred_prob'].quantile(thr)
+        thr_value_2=prob['target_var'].quantile(thr)
+ 
+        #top
+        prob['pred_prob_bin']=np.where( prob['pred_prob']>thr_value_1,1,0)
+        prob['target_var_bin']=np.where( prob['target_var']>thr_value_2,1,0)
+ 
+ 
+        #bottom
+#         prob['pred_prob_bin']=np.where( prob['pred_prob']<thr_value_1,1,0)
+#         prob['target_var_bin']=np.where( prob['target_var']<thr_value_2,1,0)
+       
+       
+       
+        tn,fp,fn,tp=confusion_matrix(prob['target_var_bin'],prob['pred_prob_bin']).ravel()
+       
+        ppv=tp/(tp+fp)
+        sens=tp/(tp+fn)
+       
+        acc=(tp+tn)/(tp+fn+tn+fp)
+ 
+        n_perc='Top '+str(np.round((1-thr)*100.0,2))+" %"
+#         n_perc='Bottom '+str(np.round((thr)*100.0,2))+" %"
+        result.loc[i]=[n_perc,tn,fp,fn,tp,ppv,sens,acc]
+        i+=1
+       
+    return result
+ 
+top_n_regression(final_df['adherence_target'],final_df['ma_risk_score_pred'])
